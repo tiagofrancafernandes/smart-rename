@@ -193,6 +193,91 @@ rename.php --pretend "*.md" draft final
 rename.php --interactive "*.md" draft final
 ```
 
+## Shell autocomplete
+
+The script can generate completion scripts for your shell.
+
+This enables TAB suggestions for flags and file paths.
+
+---
+
+### ZSH
+
+Install:
+
+```sh
+srename --completion-zsh >> ~/.zshrc
+source ~/.zshrc
+````
+
+Test:
+
+```sh
+srename --<TAB>
+```
+
+You should see available options like:
+
+```
+--pretend
+--interactive
+--once
+--regex
+--replace
+--force
+```
+
+---
+
+### BASH
+
+Install:
+
+```sh
+srename --completion-bash >> ~/.bashrc
+source ~/.bashrc
+```
+
+Test:
+
+```sh
+srename --<TAB>
+```
+
+---
+
+### What gets autocompleted
+
+* command options (`--pretend`, `--interactive`, etc)
+* file paths
+* directories
+
+---
+
+### Updating completion
+
+If you update the script, reload your shell:
+
+```sh
+source ~/.zshrc
+# or
+source ~/.bashrc
+```
+
+---
+
+### Removing completion
+
+Edit your shell config and remove the block added by the command:
+
+```
+~/.zshrc
+~/.bashrc
+```
+
+```
+
+
 ---
 
 ## Philosophy

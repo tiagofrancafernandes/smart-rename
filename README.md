@@ -8,6 +8,16 @@ It supports batch renaming, preview mode, confirmation prompts, overwrite contro
 
 Works on any system with PHP CLI installed.
 
+
+## Philosophy
+
+The goal is to provide:
+
+* predictable behavior
+* **safe** defaults
+* **portable** usage
+* **minimal dependencies**
+
 ---
 
 ## Install (quick)

@@ -2,33 +2,69 @@
 
 A tiny yet powerful CLI file renaming tool.
 
-This script behaves like a safer, interactive and portable version of `rename` + `mv`.
+Safer and more interactive than traditional `rename` and more flexible than `mv`.
 
-It works on any system with PHP CLI installed and provides batch renaming, preview mode, interactive confirmations, overwrite control and automatic single-file rename detection.
+It supports batch renaming, preview mode, confirmation prompts, overwrite control and automatic single-file rename detection.
+
+Works on any system with PHP CLI installed.
+
+---
+
+## Install (quick)
+
+### Using wget
+```sh
+wget https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -O rename.php.sh \
+&& chmod +x rename.php.sh \
+&& ./rename.php.sh --help
+````
+
+### Using curl
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -o rename.php.sh \
+&& chmod +x rename.php.sh \
+&& ./rename.php.sh --help
+```
+
+---
+
+## Global install
+
+```sh
+sudo curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -o /usr/bin/srename \
+&& sudo chmod +x /usr/bin/srename
+```
+
+Then:
+
+```sh
+srename --help
+```
+
+---
+
+## Documentation
+
+Full usage examples and explanations:
+
+👉 **[docs/USAGE.md](docs/USAGE.md)**
 
 ---
 
 ## Features
 
-- Glob pattern renaming (`*.md`, `file-*`, etc)
-- Regex search mode
-- Interactive confirmation (per file)
-- Dry-run preview (`--pretend`)
-- Safe by default (never overwrites unless allowed)
-- Replace mode (`--replace`)
-- Force mode (`--force`, like `mv -f`)
-- Single file rename (automatic mv-like behavior)
-- Recursive directory traversal
-- Positional OR named arguments
+* Batch rename with glob
+* Regex mode
+* Interactive confirmation
+* Dry-run preview
+* Safe overwrite handling
+* Automatic single-file rename mode
+* Recursive directories
+* Named arguments support
 
 ---
 
-## Requirements
+## License
 
-- PHP 8.0 or newer
-- CLI access
-
-Check:
-
-```sh
-php -v
+#### [Unlicensed](./LICENSE)

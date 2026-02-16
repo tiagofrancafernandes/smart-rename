@@ -2,63 +2,122 @@
 <?php
 
 /**
- * Author: Tiago França | tiagofranca.com
- * Repo: https://github.com/tiagofrancafernandes/smart-rename
- * https://linkedin.com/in/tiago-php
- * https://github.com/tiagofrancafernandes
+ * smart-rename
+ *
+ * Author: Tiago França
+ * Website: https://tiagofranca.com
+ * Repository: https://github.com/tiagofrancafernandes/smart-rename
+ * LinkedIn: https://linkedin.com/in/tiago-php
+ * GitHub: https://github.com/tiagofrancafernandes
  *
  * Date: 2026-02-16
  *
- * [CHANGELOG]:
+ * [CHANGELOG]
  * 2026-02-16:
- *   - Initial release: glob/regex batch rename
- *   - Added named arguments support
- *   - Added --pretend dry-run mode
- *   - Added --interactive confirmation (y/n/a/q)
- *   - Added --once (rename only first match)
- *   - Added overwrite modes: --replace and --force
- *   - Added automatic single-file rename mode (mv-like behavior)
- *   - Prevent overwriting unless explicitly requested
- *   - Added summary report
+ *   - Initial release
+ *   - Batch rename (glob)
+ *   - Regex support
+ *   - Interactive mode
+ *   - Pretend mode (dry-run)
+ *   - Replace and force overwrite
+ *   - Single-file rename (mv-like)
+ *   - Bash/Zsh autocomplete support
  */
 
 declare(strict_types=1);
 
-/* -------------------------------------------------- HELP -------------------------------------------------- */
+/* ---------------- COMPLETION ---------------- */
+
+foreach ($argv as $arg) {
+    if ($arg === '--completion-zsh') completionZsh();
+    if ($arg === '--completion-bash') completionBash();
+}
+
+function completionZsh(): void
+{
+echo <<<'ZSH'
+#compdef srename
+
+_srename() {
+  local -a opts
+  opts=(
+    '--help:Show help'
+    '--pretend:Preview only'
+    '--interactive:Confirm each rename'
+    '--once:Only first match'
+    '--regex:Regex pattern'
+    '--replace:Allow overwrite'
+    '--force:Force overwrite'
+  )
+
+  _arguments \
+    '1:pattern:_files' \
+    '2:from:' \
+    '3:to:' \
+    '4:path:_files -/' \
+    '*::options:->opts'
+
+  case $state in
+    opts)
+      _describe 'option' opts
+      ;;
+  esac
+}
+
+compdef _srename srename
+ZSH;
+exit;
+}
+
+function completionBash(): void
+{
+echo <<<'BASH'
+_srename_completion()
+{
+    local cur
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    opts="--help --pretend --interactive --once --regex --replace --force"
+
+    if [[ ${cur} == --* ]]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    COMPREPLY=( $(compgen -f -- ${cur}) )
+}
+
+complete -F _srename_completion srename
+BASH;
+exit;
+}
+
+/* ---------------- HELP ---------------- */
 
 function help(): void
 {
     echo <<<TXT
-Rename files by pattern
+smart-rename
 
 USAGE:
-  rename.php <pattern> <from> <to> [path]
-  rename.php /path/file.txt newname.txt
+  srename <pattern> <from> <to> [path]
+  srename /path/file.txt newname.txt
 
 OPTIONS:
-  --pattern=VALUE
-  --path=VALUE
-  --from=VALUE
-  --to=VALUE
-  --regex        treat pattern as regex
-  --once         rename only first match
-  --pretend      dry-run (no changes)
-  --interactive  confirm each rename
-  --replace      allow overwrite existing files
-  --force        overwrite without asking
+  --regex
+  --once
+  --pretend
+  --interactive
+  --replace
+  --force
   --help
-
-Interactive keys:
-  y = yes
-  n = no
-  a = all remaining
-  q = quit
 
 TXT;
     exit;
 }
 
-/* ------------------------------------------------ ARG PARSER ------------------------------------------------ */
+/* ---------------- ARG PARSER ---------------- */
 
 function parseArgs(array $argv): array
 {
@@ -87,19 +146,7 @@ function parseArgs(array $argv): array
         if ($arg === '--replace') { $args['replace'] = true; continue; }
         if ($arg === '--force') { $args['force'] = true; continue; }
 
-        if (str_starts_with($arg, '--')) {
-            [$key, $value] = array_pad(explode('=', substr($arg, 2), 2), 2, true);
-
-            match ($key) {
-                'pattern' => $args['pattern'] = $value,
-                'path' => $args['path'] = $value,
-                'from', 'rename-from', 'replace-from' => $args['from'] = $value,
-                'to', 'rename-to', 'replace-to' => $args['to'] = $value,
-                default => null
-            };
-
-            continue;
-        }
+        if (str_starts_with($arg, '--')) continue;
 
         $positional[] = $arg;
     }
@@ -114,7 +161,7 @@ function parseArgs(array $argv): array
     return $args;
 }
 
-/* ------------------------------------------------ FIND FILES ------------------------------------------------ */
+/* ---------------- FIND FILES ---------------- */
 
 function findFiles(string $pattern, string $path, bool $regex): array
 {
@@ -141,20 +188,15 @@ function findFiles(string $pattern, string $path, bool $regex): array
     return $files;
 }
 
-/* ------------------------------------------------ INTERACTIVE ------------------------------------------------ */
+/* ---------------- INTERACTIVE ---------------- */
 
 function ask(string $old, string $new): string
 {
-    echo "\nRename:\n";
-    echo "  FROM: $old\n";
-    echo "  TO:   $new\n";
-    echo "Choose: [y]es, [n]o, [a]ll remaining, [q]uit : ";
-
-    $line = trim(fgets(STDIN) ?: '');
-    return strtolower($line);
+    echo "\nRename:\n  FROM: $old\n  TO:   $new\n[y]es [n]o [a]ll [q]uit : ";
+    return strtolower(trim(fgets(STDIN) ?: ''));
 }
 
-/* ------------------------------------------------ RENAME ENGINE ------------------------------------------------ */
+/* ---------------- RENAME ENGINE ---------------- */
 
 function renameFiles(array $files, array $args): void
 {
@@ -185,70 +227,47 @@ function renameFiles(array $files, array $args): void
             }
 
             if ($args['interactive'] && !$args['force'] && !$acceptAll) {
-                echo "Target exists!\n";
                 $answer = ask($base, $new . " (overwrite)");
-
                 if ($answer === 'q') break;
                 if ($answer === 'n') continue;
                 if ($answer === 'a') $acceptAll = true;
-                if ($answer !== 'y' && $answer !== 'a') continue;
             }
 
             if (!$args['pretend']) unlink($newPath);
-
-            echo $args['pretend']
-                ? "[pretend overwrite] $base -> $new\n"
-                : "OVERWRITTEN: $base -> $new";
+            echo $args['pretend'] ? "[pretend overwrite] $base -> $new\n" : "OVERWRITTEN: $base -> $new\n";
 
         } else {
 
             if ($args['interactive'] && !$acceptAll) {
                 $answer = ask($base, $new);
-
                 if ($answer === 'q') break;
                 if ($answer === 'n') continue;
                 if ($answer === 'a') $acceptAll = true;
-                if ($answer !== 'y' && $answer !== 'a') continue;
             }
 
-            if ($args['pretend']) {
-                echo "[pretend] $base -> $new\n";
-            } else {
-                rename($file, $newPath);
-                echo "RENAMED: $base -> $new\n";
-            }
+            if ($args['pretend']) echo "[pretend] $base -> $new\n";
+            else { rename($file, $newPath); echo "RENAMED: $base -> $new\n"; }
         }
 
         $renamed++;
-
         if ($args['once']) break;
     }
 
-    echo "\nSummary:\n";
-    echo "  Matched: " . count($files) . "\n";
-    echo "  Processed: $processed\n";
-    echo "  Renamed: $renamed\n";
-    if ($args['pretend']) echo "  Mode: pretend (no changes made)\n";
+    echo "\nSummary:\n  Matched: " . count($files) . "\n  Processed: $processed\n  Renamed: $renamed\n";
+    if ($args['pretend']) echo "  Mode: pretend\n";
 }
 
-/* ------------------------------------------------ ENTRYPOINT ------------------------------------------------ */
+/* ---------------- ENTRYPOINT ---------------- */
 
 $rawArgs = array_slice($argv, 1);
 
-/* Direct rename mode (mv-like) */
-if (
-    count($rawArgs) === 2 &&
-    is_file($rawArgs[0]) &&
-    !str_starts_with($rawArgs[1], '--')
-) {
+/* single file rename mode */
+if (count($rawArgs) === 2 && is_file($rawArgs[0]) && !str_starts_with($rawArgs[1], '--')) {
     $source = realpath($rawArgs[0]);
-    $newName = $rawArgs[1];
-
-    $dir = dirname($source);
-    $target = $dir . DIRECTORY_SEPARATOR . $newName;
+    $target = dirname($source) . DIRECTORY_SEPARATOR . $rawArgs[1];
 
     if (file_exists($target)) {
-        fwrite(STDERR, "Error: target already exists: $target\n");
+        fwrite(STDERR, "Error: target already exists\n");
         exit(1);
     }
 
@@ -257,7 +276,7 @@ if (
     exit;
 }
 
-/* Normal batch mode */
+/* normal mode */
 $args = parseArgs($rawArgs);
 $files = findFiles($args['pattern'], $args['path'], $args['regex']);
 renameFiles($files, $args);

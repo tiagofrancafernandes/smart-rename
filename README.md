@@ -24,7 +24,7 @@ The goal is to provide:
 
 ### Using wget
 ```sh
-wget https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -O rename.php.sh \
+wget https://raw.githubusercontent.com/tiagofrancafernandes/smart-rename/refs/heads/master/rename.php.sh -O rename.php.sh \
 && chmod +x rename.php.sh \
 && ./rename.php.sh --help
 ````
@@ -32,7 +32,7 @@ wget https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/hea
 ### Using curl
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -o rename.php.sh \
+curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/smart-rename/refs/heads/master/rename.php.sh -o rename.php.sh \
 && chmod +x rename.php.sh \
 && ./rename.php.sh --help
 ```
@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/re
 ## Global install
 
 ```sh
-sudo curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/[repo-name]/refs/heads/master/rename.php.sh -o /usr/bin/srename \
+sudo curl -fsSL https://raw.githubusercontent.com/tiagofrancafernandes/smart-rename/refs/heads/master/rename.php.sh -o /usr/bin/srename \
 && sudo chmod +x /usr/bin/srename
 ```
 
